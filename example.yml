@@ -1,0 +1,23 @@
+neuroflow:
+  gateway:
+    models:
+      openai:
+        api-key: ${OPENAI_API_KEY}
+      qwen:
+        api-key: ${QWEN_API_KEY}
+    model-priority:
+      - openai
+      - qwen
+  agent:
+    workflow-dir: classpath:/workflows
+  tools:
+    text2sql: true
+  vector-store:
+    type: redis
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      index-name: ai-vectors
+
+logging:
+  config: classpath:logback-spring.xml
