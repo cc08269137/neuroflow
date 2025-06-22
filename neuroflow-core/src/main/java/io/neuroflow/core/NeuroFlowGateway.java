@@ -28,28 +28,41 @@ public class NeuroFlowGateway {
 
     public Mono<ModelResponse> execute(ModelRequest request) {
         String model = selectModel(request.getModel());
-        log.info("Executing request on model: {}", model);
-        return modelClients.get(model).call(request);
+        log.info("[NeuroFlowGateway] 执行请求，模型: {}，原始请求模型: {}", model, request.getModel());
+        log.debug("[NeuroFlowGateway] 请求详情: {}", request);
+        return modelClients.get(model).call(request)
+                .doOnSuccess(resp -> log.info("[NeuroFlowGateway] 请求执行成功，模型: {}，响应ID: {}", model, resp.getId()))
+                .doOnError(e -> log.error("[NeuroFlowGateway] 请求执行失败，模型: {}", model, e));
     }
 
     public Flux<String> stream(ModelRequest request) {
         String model = selectModel(request.getModel());
-        log.info("Streaming request on model: {}", model);
-        return modelClients.get(model).stream(request);
+        log.info("[NeuroFlowGateway] 流式请求，模型: {}，原始请求模型: {}", model, request.getModel());
+        log.debug("[NeuroFlowGateway] 流式请求详情: {}", request);
+        return modelClients.get(model).stream(request)
+                .doOnNext(token -> log.debug("[NeuroFlowGateway] 流式响应: {} -> {}", model, token))
+                .doOnComplete(() -> log.info("[NeuroFlowGateway] 流式请求完成，模型: {}", model))
+                .doOnError(e -> log.error("[NeuroFlowGateway] 流式请求失败，模型: {}", model, e));
     }
 
     private String selectModel(String preferredModel) {
+        log.debug("[NeuroFlowGateway] 选择模型，偏好模型: {}，可用模型: {}", preferredModel, modelClients.keySet());
+        
         if (preferredModel != null && modelClients.containsKey(preferredModel)) {
+            log.info("[NeuroFlowGateway] 使用偏好模型: {}", preferredModel);
             return preferredModel;
         }
 
         for (String model : modelPriority) {
             if (modelClients.containsKey(model)) {
+                log.info("[NeuroFlowGateway] 按优先级选择模型: {} (偏好模型 {} 不可用)", model, preferredModel);
                 return model;
             }
         }
 
-        log.warn("No available model found, using first available");
-        return modelClients.keySet().iterator().next();
+        log.warn("[NeuroFlowGateway] 没有可用模型，使用第一个可用模型");
+        String fallbackModel = modelClients.keySet().iterator().next();
+        log.info("[NeuroFlowGateway] 使用回退模型: {}", fallbackModel);
+        return fallbackModel;
     }
 }

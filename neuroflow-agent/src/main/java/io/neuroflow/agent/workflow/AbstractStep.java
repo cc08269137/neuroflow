@@ -23,21 +23,22 @@ public abstract class AbstractStep implements Step {
 
     @Override
     public Mono<Map<String, Object>> execute(Map<String, Object> context) {
-        log.info("Executing step: {}", name);
+        log.info("[Step] 开始执行: {}，上下文: {}", name, context);
         try {
             return doExecute(context)
                     .onErrorResume(e -> handleStepError(e, context))
-                    .doOnSuccess(result -> log.info("Step {} completed successfully", name))
-                    .doOnError(e -> log.error("Step {} failed", name, e));
+                    .doOnSuccess(result -> log.info("[Step] {} 执行成功，输出: {}", name, result))
+                    .doOnError(e -> log.error("[Step] {} 执行失败", name, e));
         } catch (Exception e) {
+            log.error("[Step] {} 执行异常", name, e);
             return handleStepError(e, context);
         }
     }
     @Override
     public Flux<String> stream(Map<String, Object> context) {
-        log.info("Streaming step: {}", name);
+        log.info("[Step] 开始流式执行: {}，上下文: {}", name, context);
         return doStream(context)
-                .doOnError(e -> log.error("Step {} streaming failed", name, e));
+                .doOnError(e -> log.error("[Step] {} 流式执行失败", name, e));
     }
 
     protected abstract Mono<Map<String, Object>> doExecute(Map<String, Object> context);

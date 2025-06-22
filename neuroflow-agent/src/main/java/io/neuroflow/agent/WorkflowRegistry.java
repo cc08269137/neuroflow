@@ -1,6 +1,8 @@
 package io.neuroflow.agent;
 
-
+import io.neuroflow.agent.workflow.Workflow;
+import io.neuroflow.agent.workflow.WorkflowMetadata;
+import io.neuroflow.agent.workflow.WorkflowStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -17,7 +19,6 @@ public class WorkflowRegistry {
     private static final Logger log = LoggerFactory.getLogger(WorkflowRegistry.class);
 
     private final Map<String, Workflow> workflowMap = new ConcurrentHashMap<>();
-    private final Map<String, WorkflowMetadata> metadataMap = new ConcurrentHashMap<>();
 
     /**
      * 注册工作流
@@ -30,12 +31,6 @@ public class WorkflowRegistry {
         }
 
         workflowMap.put(id, workflow);
-        metadataMap.put(id, new WorkflowMetadata(
-                id,
-                workflow.getClass().getSimpleName(),
-                System.currentTimeMillis()
-        ));
-
         log.info("Registered workflow: {}", id);
     }
 
@@ -62,7 +57,8 @@ public class WorkflowRegistry {
      * @return 工作流元数据
      */
     public WorkflowMetadata getWorkflowMetadata(String id) {
-        return metadataMap.get(id);
+        Workflow workflow = workflowMap.get(id);
+        return workflow != null ? workflow.getMetadata() : null;
     }
 
     /**
@@ -70,7 +66,9 @@ public class WorkflowRegistry {
      * @return 所有工作流元数据列表
      */
     public List<WorkflowMetadata> getAllWorkflowMetadata() {
-        return new ArrayList<>(metadataMap.values());
+        return workflowMap.values().stream()
+                .map(Workflow::getMetadata)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -79,7 +77,6 @@ public class WorkflowRegistry {
      */
     public void unregisterWorkflow(String id) {
         workflowMap.remove(id);
-        metadataMap.remove(id);
         log.info("Unregistered workflow: {}", id);
     }
 
@@ -95,31 +92,6 @@ public class WorkflowRegistry {
         }
 
         workflowMap.put(id, workflow);
-        metadataMap.get(id).setLastReloaded(System.currentTimeMillis());
         log.info("Reloaded workflow: {}", id);
-    }
-
-    /**
-     * 工作流元数据类
-     */
-    public static class WorkflowMetadata {
-        private final String id;
-        private final String type;
-        private long lastReloaded;
-        private String description;
-
-        public WorkflowMetadata(String id, String type, long lastReloaded) {
-            this.id = id;
-            this.type = type;
-            this.lastReloaded = lastReloaded;
-        }
-
-        // Getters and Setters
-        public String getId() { return id; }
-        public String getType() { return type; }
-        public long getLastReloaded() { return lastReloaded; }
-        public void setLastReloaded(long lastReloaded) { this.lastReloaded = lastReloaded; }
-        public String getDescription() { return description; }
-        public void setDescription(String description) { this.description = description; }
     }
 }

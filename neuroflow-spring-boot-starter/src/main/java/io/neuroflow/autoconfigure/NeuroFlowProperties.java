@@ -15,12 +15,15 @@ public class NeuroFlowProperties {
     private Agent agent = new Agent();
     private Tools tools = new Tools();
     private VectorStore vectorStore = new VectorStore();
+    private Logging logging = new Logging();
 
     @Getter
     @Setter
     public static class Gateway {
         private Models models = new Models();
         private List<String> modelPriority = new ArrayList<>();
+        private int timeout = 5000;
+        private int maxRetries = 3;
     }
 
     @Getter
@@ -28,12 +31,14 @@ public class NeuroFlowProperties {
     public static class Models {
         private OpenAIConfig openai;
         private QwenConfig qwen;
+        private OllamaConfig ollama;
     }
 
     @Getter
     @Setter
     public static class OpenAIConfig {
         private String apiKey;
+        private String endpoint = "https://api.openai.com/v1";
     }
 
     @Getter
@@ -45,14 +50,36 @@ public class NeuroFlowProperties {
 
     @Getter
     @Setter
+    public static class OllamaConfig {
+        private String baseUrl = "http://localhost:11434";
+        private String model = "llama3";
+    }
+
+    @Getter
+    @Setter
     public static class Agent {
+        private boolean enabled = true;
         private String workflowDir = "classpath:/workflows";
+        private boolean autoReload = true;
     }
 
     @Getter
     @Setter
     public static class Tools {
-        private boolean text2sql = false;
+        private Text2SQL text2sql = new Text2SQL();
+        private OCR ocr = new OCR();
+    }
+
+    @Getter
+    @Setter
+    public static class Text2SQL {
+        private boolean enabled = true;
+    }
+
+    @Getter
+    @Setter
+    public static class OCR {
+        private boolean enabled = false;
     }
 
     @Getter
@@ -68,5 +95,14 @@ public class NeuroFlowProperties {
         private String host = "localhost";
         private int port = 6379;
         private String indexName = "neuroflow-vectors";
+        private String password;
+    }
+
+    @Getter
+    @Setter
+    public static class Logging {
+        private String level = "INFO";
+        private String format = "json";
+        private boolean enableMetrics = true;
     }
 }

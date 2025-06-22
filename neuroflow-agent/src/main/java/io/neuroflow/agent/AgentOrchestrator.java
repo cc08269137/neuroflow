@@ -1,6 +1,6 @@
 package io.neuroflow.agent;
 
-
+import io.neuroflow.agent.workflow.Workflow;
 import io.neuroflow.agent.workflow.WorkflowExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

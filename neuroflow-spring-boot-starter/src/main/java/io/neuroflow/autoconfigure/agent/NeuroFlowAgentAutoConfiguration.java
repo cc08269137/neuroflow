@@ -27,7 +27,7 @@ public class NeuroFlowAgentAutoConfiguration {
     }
 
     @Bean
-    public WorkflowEndpoint workflowEndpoint(WorkflowRegistry registry) {
-        return new WorkflowEndpoint(registry);
+    public WorkflowEndpoint workflowEndpoint(WorkflowRegistry registry, AgentOrchestrator orchestrator) {
+        return new WorkflowEndpoint(registry, orchestrator);
     }
 }

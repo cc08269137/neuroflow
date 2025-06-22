@@ -3,21 +3,46 @@ neuroflow:
     models:
       openai:
         api-key: ${OPENAI_API_KEY}
+        endpoint: https://api.openai.com/v1
       qwen:
         api-key: ${QWEN_API_KEY}
+        endpoint: dashscope.aliyuncs.com
+      ollama:
+        base-url: http://localhost:11434
+        model: llama3
     model-priority:
       - openai
       - qwen
+      - ollama
+    timeout: 5000
+    max-retries: 3
+
   agent:
+    enabled: true
     workflow-dir: classpath:/workflows
+    auto-reload: true
+
   tools:
-    text2sql: true
+    text2sql:
+      enabled: true
+    ocr:
+      enabled: false
+
   vector-store:
     type: redis
     redis:
-      host: 127.0.0.1
+      host: localhost
       port: 6379
-      index-name: ai-vectors
+      index-name: neuroflow-vectors
+      password: ${REDIS_PASSWORD}
+
+  logging:
+    level: INFO
+    format: json
+    enable-metrics: true
 
 logging:
   config: classpath:logback-spring.xml
+  level:
+    io.neuroflow: DEBUG
+    org.springframework: WARN

@@ -26,24 +26,36 @@ public class OpenAIClient implements ModelClient {
 
     @Override
     public Mono<ModelResponse> call(ModelRequest request) {
-        log.debug("Sending request to OpenAI: {}", request);
+        log.info("[OpenAIClient] 发送请求到 OpenAI，模型: {}", request.getModel());
+        log.debug("[OpenAIClient] 请求详情: {}", request);
         return webClient.post()
                 .uri("/chat/completions")
                 .bodyValue(request)
                 .retrieve()
                 .bodyToMono(ModelResponse.class)
-                .doOnSuccess(res -> log.debug("Received OpenAI response"))
-                .doOnError(e -> log.error("OpenAI request failed", e));
+                .doOnSuccess(res -> {
+                    log.info("[OpenAIClient] 收到 OpenAI 响应，模型: {}，响应ID: {}", request.getModel(), res.getId());
+                    if (res.getUsage() != null) {
+                        log.debug("[OpenAIClient] Token 使用情况: 提示词={}, 完成={}, 总计={}", 
+                                res.getUsage().getPromptTokens(), 
+                                res.getUsage().getCompletionTokens(), 
+                                res.getUsage().getTotalTokens());
+                    }
+                })
+                .doOnError(e -> log.error("[OpenAIClient] OpenAI 请求失败，模型: {}", request.getModel(), e));
     }
 
     @Override
     public Flux<String> stream(ModelRequest request) {
-        log.debug("Streaming request to OpenAI");
+        log.info("[OpenAIClient] 发送流式请求到 OpenAI，模型: {}", request.getModel());
+        log.debug("[OpenAIClient] 流式请求详情: {}", request);
         return webClient.post()
                 .uri("/chat/completions")
                 .bodyValue(request)
                 .retrieve()
                 .bodyToFlux(String.class)
-                .doOnError(e -> log.error("OpenAI stream failed", e));
+                .doOnNext(chunk -> log.debug("[OpenAIClient] 流式响应块: {}", chunk))
+                .doOnComplete(() -> log.info("[OpenAIClient] OpenAI 流式请求完成，模型: {}", request.getModel()))
+                .doOnError(e -> log.error("[OpenAIClient] OpenAI 流式请求失败，模型: {}", request.getModel(), e));
     }
 }

@@ -25,24 +25,36 @@ public class QwenClient implements ModelClient {
 
     @Override
     public Mono<ModelResponse> call(ModelRequest request) {
-        log.debug("Sending request to Qwen: {}", request);
+        log.info("[QwenClient] 发送请求到 Qwen，模型: {}", request.getModel());
+        log.debug("[QwenClient] 请求详情: {}", request);
         return webClient.post()
                 .uri("/api/v1/services/aigc/text-generation/generation")
                 .bodyValue(request)
                 .retrieve()
                 .bodyToMono(ModelResponse.class)
-                .doOnSuccess(res -> log.debug("Received Qwen response"))
-                .doOnError(e -> log.error("Qwen request failed", e));
+                .doOnSuccess(res -> {
+                    log.info("[QwenClient] 收到 Qwen 响应，模型: {}，响应ID: {}", request.getModel(), res.getId());
+                    if (res.getUsage() != null) {
+                        log.debug("[QwenClient] Token 使用情况: 提示词={}, 完成={}, 总计={}", 
+                                res.getUsage().getPromptTokens(), 
+                                res.getUsage().getCompletionTokens(), 
+                                res.getUsage().getTotalTokens());
+                    }
+                })
+                .doOnError(e -> log.error("[QwenClient] Qwen 请求失败，模型: {}", request.getModel(), e));
     }
 
     @Override
     public Flux<String> stream(ModelRequest request) {
-        log.debug("Streaming request to Qwen");
+        log.info("[QwenClient] 发送流式请求到 Qwen，模型: {}", request.getModel());
+        log.debug("[QwenClient] 流式请求详情: {}", request);
         return webClient.post()
                 .uri("/api/v1/services/aigc/text-generation/generation")
                 .bodyValue(request)
                 .retrieve()
                 .bodyToFlux(String.class)
-                .doOnError(e -> log.error("Qwen stream failed", e));
+                .doOnNext(chunk -> log.debug("[QwenClient] 流式响应块: {}", chunk))
+                .doOnComplete(() -> log.info("[QwenClient] Qwen 流式请求完成，模型: {}", request.getModel()))
+                .doOnError(e -> log.error("[QwenClient] Qwen 流式请求失败，模型: {}", request.getModel(), e));
     }
 }

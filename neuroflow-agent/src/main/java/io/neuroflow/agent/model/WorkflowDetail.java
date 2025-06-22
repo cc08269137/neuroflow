@@ -1,4 +1,4 @@
-package io.neuroflow.autoconfigure.agent.model;
+package io.neuroflow.agent.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.neuroflow.agent.workflow.WorkflowMetadata;
@@ -56,17 +56,17 @@ public class WorkflowDetail {
         return new WorkflowDetail(
                 workflow.getId(),
                 workflow.getName(),
-                metadata.getDescription(),
+                metadata != null ? metadata.getDescription() : "",
                 workflow.getStepCount(),
-                status.getState().name(),
-                metadata.getCreatedAt(),
-                metadata.getLastModified(),
-                metadata.getCreatedBy(),
-                metadata.getVersion(),
-                metadata.getProperties(),
-                status.getLastExecutionTime(),
-                status.getLastExecutionResult(),
-                status.getNextScheduleTime()
+                status != null ? status.getState().name() : "UNKNOWN",
+                metadata != null ? metadata.getCreatedAt() : null,
+                metadata != null ? metadata.getLastModified() : null,
+                metadata != null ? metadata.getCreatedBy() : null,
+                metadata != null ? metadata.getVersion() : null,
+                metadata != null ? metadata.getProperties() : null,
+                status != null ? status.getLastExecutionTime() : null,
+                status != null ? status.getLastExecutionResult() : null,
+                status != null ? status.getNextScheduleTime() : null
         );
     }
 
@@ -84,4 +84,4 @@ public class WorkflowDetail {
     public Instant getLastExecutionTime() { return lastExecutionTime; }
     public String getLastExecutionResult() { return lastExecutionResult; }
     public Instant getNextScheduleTime() { return nextScheduleTime; }
-}
+} 
